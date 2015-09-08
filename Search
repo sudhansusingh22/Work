@@ -1,0 +1,817 @@
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.Queue;
+import java.util.Stack;
+
+public class SearchRomania {
+
+	public static void main(String[] args) {
+		// TODO Auto-generated method stub
+		Graph graph = new Graph();
+		
+		boolean	goalFound;
+
+		graph.makeMap();
+			if (args[0].equals("BFS")){
+			BreadFirstSearchClass bfs = new BreadFirstSearchClass();
+			goalFound=bfs.breadthFirstSearch(args[1], args[2]);
+			if(goalFound) bfs.printGoalPath(args[2]);
+				else System.out.println("Goal state not found");
+		}
+		else if(args[0].equals("DFS")){
+			BreadFirstSearchClass dfs = new BreadFirstSearchClass();
+			goalFound=dfs.depthFirstSearch(args[1], args[2]);
+			if(goalFound) dfs.printGoalPath(args[2]);
+			else System.out.println("Goal state not found");;
+
+		}
+		else{
+			System.out.println("Wrong search entered");
+		}
+		
+	}
+}
+
+
+// Breadth first Search class
+class BreadFirstSearchClass{
+	City startCity = null;
+	City currentCity = null;
+	City childCity = null;
+	City exploredCity = null;
+	City frontierCity = null;
+	public ArrayList<PathRecord> pathsTraveled ;//= new ArrayList<PathRecord>();
+	PathRecord newRecord ; 
+	PathRecord temporaryRecord ;
+	public BreadFirstSearchClass() {
+		// TODO Auto-generated constructor stub
+		pathsTraveled = new ArrayList<PathRecord>();
+	}
+
+	boolean breadthFirstSearch (String startName, String endName){
+	/*	City startCity = null;
+		City currentCity = null;
+		City childCity = null;
+		City exploredCity;
+		City frontierCity;*/
+		
+		Neighbor currentNeighbor = null;
+		
+		Queue<City> frontier;
+		frontier = new LinkedList<City>();
+
+		Queue<City> explored;
+		explored = new LinkedList<City>();
+		newRecord = new PathRecord(startName);
+		temporaryRecord = new PathRecord("");
+		boolean startCityFound = false;
+		boolean goalFound = false;
+		boolean alreadyExplored;
+		boolean alreadyInFrontier = false;
+		boolean pathFound = false;;
+		
+		Graph graph = new Graph();
+		graph.makeMap();
+		
+		// initializing pathTraveled
+		
+		if (startName.equals(endName)) {
+			return true;
+		}
+		if (startName.equals("") || endName.equals("")) {
+			return false;
+		}
+		
+// searching for start
+		
+		for (Iterator<City> iterator = graph.cities.iterator(); iterator.hasNext();) {
+			City city = (City) iterator.next();
+			if(city.name.equals(startName)){
+				startCity = city;
+				startCityFound = true;
+				System.out.println("Start found " + startCity.name);
+			}
+		}
+		if(startCityFound == false) return false;
+		pathsTraveled.add(newRecord);
+		frontier.add(startCity);
+
+		
+// searching for end
+		
+		while(!frontier.isEmpty() && goalFound==false){
+			currentCity = frontier.element();
+			explored.add(currentCity);
+			frontier.remove();
+
+			// Convert neighbor into a childCity
+			for (Iterator<Neighbor> iterator2 = currentCity.neighbor.iterator(); iterator2.hasNext();) {
+						Neighbor neighbor = (Neighbor) iterator2.next();
+						currentNeighbor = neighbor;
+						childCity = getChildCity(currentNeighbor, childCity);
+						if(childCity==null) {
+							return false;
+						}
+						if(childCity.name.equals(endName)){
+							System.out.println("goal found " + childCity.name);
+							goalFound = true;
+						}
+		
+					// testing child in explored queue
+					alreadyExplored = false;
+					for (Iterator<City> iterator = explored.iterator(); iterator.hasNext();) {
+						City city = (City) iterator.next();
+						exploredCity = city;
+						if (exploredCity.name.equals(childCity.name)) {
+							alreadyExplored = true;
+							break;
+						}
+					}
+					// test for child in frontier
+					if(alreadyExplored == false){
+						alreadyInFrontier = false;
+						for (Iterator<City> iterator = frontier.iterator(); iterator.hasNext();) {
+							City city = (City) iterator.next();
+							frontierCity = city;
+							if (frontierCity.name.equals(childCity.name)) {
+								alreadyInFrontier = true;
+								break;
+							}
+						}
+					}
+					
+					// Add child to the path traveled
+					if(alreadyExplored == false  && alreadyInFrontier == false){
+						pathFound = false;
+						frontier.add(childCity);
+						for (Iterator<PathRecord> iterator = pathsTraveled.iterator(); iterator.hasNext();) {
+							PathRecord pathRecord = (PathRecord) iterator.next();
+							temporaryRecord = pathRecord;
+							if(temporaryRecord.lastEntry.equals(currentCity.name)){
+								PathRecord myNewRecord = new PathRecord(temporaryRecord);
+								myNewRecord.addPath(temporaryRecord, childCity, currentNeighbor);
+								pathsTraveled.add(myNewRecord);
+								pathFound = true;
+								break;
+							}
+							
+						}
+					}
+				}
+		// Display content of Explored queue on each pass
+			//System.out.print("Explored:" );
+		for (Iterator<City> iterator = explored.iterator(); iterator.hasNext();) {
+			City city = (City) iterator.next();
+		/*	System.out.print( " ");
+			System.out.print( city.name);
+			System.out.print( " ");*/
+
+		}
+		
+		// Display content of Frontier queue on each pass
+	//	System.out.print("\nFrontier:");
+
+				for (Iterator<City> iterator = frontier.iterator(); iterator.hasNext();) {
+					City city = (City) iterator.next();
+				/*	System.out.print( " ");
+					System.out.print(city.name);
+					System.out.print( " ");*/
+				}
+				//System.out.print( "\n");
+
+		}
+		return goalFound;
+	}
+	
+	boolean depthFirstSearch (String startName, String endName){
+
+			
+			Neighbor currentNeighbor = null;
+			
+			Stack<City> frontier;
+			frontier = new Stack<City>();
+
+			Queue<City> explored;
+			explored = new LinkedList<City>();
+			newRecord = new PathRecord(startName);
+			temporaryRecord = new PathRecord("");
+			boolean startCityFound = false;
+			boolean goalFound = false;
+			boolean alreadyExplored;
+			boolean alreadyInFrontier = false;
+			boolean pathFound = false;;
+			
+			Graph graph = new Graph();
+			graph.makeMap();
+			
+			// initializing pathTraveled
+			
+			if (startName.equals(endName)) {
+				return true;
+			}
+			if (startName.equals("") || endName.equals("")) {
+				return false;
+			}
+			
+	// searching for start
+			
+			for (Iterator<City> iterator = graph.cities.iterator(); iterator.hasNext();) {
+				City city = (City) iterator.next();
+				if(city.name.equals(startName)){
+					startCity = city;
+					startCityFound = true;
+				}
+			}
+			if(startCityFound == false) return false;
+			pathsTraveled.add(newRecord);
+			frontier.push(startCity);
+			System.out.println("start " + startCity.name);
+			
+	// searching for end
+			
+			while(!frontier.isEmpty() && goalFound==false){
+				currentCity = frontier.peek();
+				explored.add(currentCity);
+				frontier.pop();
+				// Convert neighbor into a childCity
+				for (Iterator<Neighbor> iterator2 = currentCity.neighbor.iterator(); iterator2.hasNext();) {
+							Neighbor neighbor = (Neighbor) iterator2.next();
+							currentNeighbor = neighbor;
+							childCity = getChildCity(currentNeighbor, childCity);
+							if(childCity==null) {
+								return false;
+							}
+							if(childCity.name.equals(endName)){
+								System.out.println("goal found " + childCity.name);
+								goalFound = true;
+							}
+			
+						// testing child in explored queue
+						alreadyExplored = false;
+						for (Iterator<City> iterator = explored.iterator(); iterator.hasNext();) {
+							City city = (City) iterator.next();
+							exploredCity = city;
+							if (exploredCity.name.equals(childCity.name)) {
+
+								alreadyExplored = true;
+								break;
+							}
+						}
+			
+						// test for child in frontier
+							if(alreadyExplored == false){
+							alreadyInFrontier = false;
+							for (Iterator<City> iterator = frontier.iterator(); iterator.hasNext();) {
+								City city = (City) iterator.next();
+								frontierCity = city;
+								if (frontierCity.name.equals(childCity.name)) {
+									alreadyInFrontier = true;
+									break;
+								}
+							}
+						}
+						
+						// Add child to the path traveled
+						if(alreadyExplored == false  && alreadyInFrontier == false){
+							
+							pathFound = false;
+							frontier.add(childCity);
+
+							for (Iterator<PathRecord> iterator = pathsTraveled.iterator(); iterator.hasNext();) {
+								PathRecord pathRecord = (PathRecord) iterator.next();
+								temporaryRecord = pathRecord;
+								if(temporaryRecord.lastEntry.equals(currentCity.name)){
+									PathRecord myNewRecord = new PathRecord(temporaryRecord);
+									myNewRecord.addPath(temporaryRecord, childCity, currentNeighbor);
+									pathsTraveled.add(myNewRecord);
+									pathFound = true;
+									break;
+								}
+							}
+						}
+					} 
+			// Display content of Explored queue on each pass
+				//System.out.print("Explored:" );
+			for (Iterator<City> iterator = explored.iterator(); iterator.hasNext();) {
+				City city = (City) iterator.next();
+			/*	System.out.print( " ");
+				System.out.print( city.name);
+				System.out.print( " ");*/
+
+			}
+			
+			// Display content of Frontier queue on each pass
+		//	System.out.print("\nFrontier:");
+
+					for (Iterator<City> iterator = frontier.iterator(); iterator.hasNext();) {
+						City city = (City) iterator.next();
+					/*	System.out.print( " ");
+						System.out.print(city.name);
+						System.out.print( " ");*/
+					}
+					//System.out.print( "\n");
+
+			}
+			return goalFound;
+		}
+		
+	
+City getChildCity(Neighbor parent, City childCity){
+	Graph graph = new Graph();
+	graph.makeMap();
+
+		for (Iterator<City> iterator = graph.cities.iterator(); iterator.hasNext();) {
+			City city = (City) iterator.next();
+			if(city.name.equals(parent.name) ){
+				childCity = city;
+				return childCity;
+			}
+			
+		}
+		return null;
+		
+	}
+
+void printGoalPath(String goalName){
+	System.out.println("Goal Path is " + pathsTraveled.size());
+	for (Iterator<PathRecord> iterator = pathsTraveled.iterator(); iterator.hasNext();) {
+		PathRecord pathRecord = (PathRecord) iterator.next();
+		if(pathRecord.lastEntry.equals(goalName)){
+			System.out.println(pathRecord.accumulatedPath + " " + pathRecord.accumulatedDistance);
+		}
+		}
+}
+}
+
+// Depth First Search class
+
+/*class DepthFirstSearchClass{
+	
+	City currentCity = null;
+	City startCity = null;
+	City childCity = null;
+	City exploredCity = null;
+	City frontierCity = null;
+	
+	Neighbor currentNeighbor = null;
+	boolean startCityFound = false;
+	boolean goalFound = false;
+	boolean alreadyInFrontier;
+	boolean newChildFound;
+	boolean pathFound;
+	boolean	alreadyExplored;
+
+	
+	Stack<City> frontier = new Stack<City>();
+	Queue<City> explored = new LinkedList<City>();
+	PathRecord newRecord ; 
+	PathRecord temporaryRecord ;
+	public ArrayList<PathRecord> pathsTraveled ;//= new ArrayList<PathRecord>();
+	public DepthFirstSearchClass(){
+		pathsTraveled =  new ArrayList<PathRecord>();
+	}
+	boolean depthFirstSearch(String startName, String endName){
+		
+		newRecord = new PathRecord(startName);
+		temporaryRecord = new PathRecord("");
+		Graph graph = new Graph();
+		graph.makeMap();
+		if (startName.equals(endName)) {
+			return true;
+		}
+		if(startName.equals("") || endName.equals("")) return false;
+		
+		for (Iterator<City> iterator = graph.cities.iterator(); iterator.hasNext();) {
+			City city = (City) iterator.next();
+			if(city.name.equals(startName)){
+				startCity = city;
+				startCityFound = true;
+				//System.out.println("Start found " + startCity.name);
+			}
+		}
+		pathsTraveled.add(newRecord);
+		frontier.push(startCity);
+		
+		// Search for goals
+		System.out.println("search for goals " + frontier);
+		for (int i = 0; i < frontier.size(); i++) {
+			System.out.println(frontier.elementAt(i).name);
+			
+		}
+		
+		while (!frontier.empty() && goalFound ==false) {
+			currentCity = frontier.peek();
+			System.out.println("the size of stack is " + frontier.size());
+			System.out.println("Current city is " + currentCity);
+			newChildFound = false;
+			for (Iterator<Neighbor> iterator = currentCity.neighbor.iterator(); iterator.hasNext();) {
+				Neighbor neighbor = (Neighbor) iterator.next();
+				currentNeighbor = neighbor;
+				childCity = getChildCity(currentNeighbor, childCity);
+				System.out.println("childCity is " + childCity.name);
+				if(childCity==null) {
+					return false;
+				}
+				if(childCity.name.equals(endName)){
+					System.out.println("goal found " + childCity.name);
+					goalFound = true;
+				}
+				
+				// check for child already explored
+				alreadyExplored = false;
+				for (Iterator<City> iterator1 = explored.iterator(); iterator1.hasNext();) {
+					City city = (City) iterator1.next();
+					exploredCity = city;
+					System.out.println("******" + exploredCity.name); 
+					if (exploredCity.name.equals(childCity.name)) {
+						alreadyExplored = true;
+						break;
+					}
+				}
+				
+				//check for child already in frontier
+					if(alreadyExplored){
+					alreadyInFrontier = false;
+					for (Iterator<City> iterator1 = frontier.iterator(); iterator1.hasNext();) {
+						City city = (City) iterator1.next();
+						frontierCity = city;
+						System.out.println("******" + frontierCity.name); 
+						if (frontierCity.name.equals(childCity.name)) {
+							alreadyInFrontier = true;
+							break;
+						}
+					}
+				}
+					System.out.println("******" + alreadyExplored + "*******"+ alreadyInFrontier); 
+
+					if(alreadyExplored == false && alreadyInFrontier == false){
+						try {
+							frontier.push(childCity);
+
+						} catch (Exception e) {
+							// TODO: handle exception
+							System.out.println(e.getMessage());
+						}
+						System.out.println(childCity.name);
+					newChildFound = true;
+					pathFound = false;
+					for (Iterator<PathRecord> iterator1 = pathsTraveled.iterator(); iterator1.hasNext();) {
+						PathRecord pathRecord = (PathRecord) iterator1.next();
+						temporaryRecord = pathRecord;
+//						System.out.println("temp record last name " + temporaryRecord.lastEntry + " current city " + currentCity.name);
+						if(temporaryRecord.lastEntry.equals(currentCity.name)){
+							PathRecord myNewRecord = new PathRecord(temporaryRecord);
+							myNewRecord.addPath(temporaryRecord, childCity, currentNeighbor);
+							System.out.println("newrecord is " + myNewRecord.toString());
+							pathsTraveled.add(myNewRecord);
+							pathFound = true;
+							break;
+						}
+					}
+				}
+				
+			}
+			// Display the explored records
+			if(newChildFound == false){
+				explored.add(currentCity);
+				frontier.pop();
+			}
+			System.out.println("Explored: ");
+			for (Iterator<City> iterator = explored.iterator(); iterator.hasNext();) {
+				City city = (City) iterator.next();
+				exploredCity = city;
+				System.out.println(exploredCity.name + " ");
+				
+			}
+			System.out.println("Frontier: ");
+			for (Iterator<City> iterator = frontier.iterator(); iterator.hasNext();) {
+				City city = (City) iterator.next();
+				frontierCity = city;
+				System.out.println(frontierCity.name + " ");
+				
+			}
+			
+		}
+		return goalFound;
+	}
+	City getChildCity(Neighbor parent, City childCity){
+		Graph graph = new Graph();
+		graph.makeMap();
+
+			for (Iterator<City> iterator = graph.cities.iterator(); iterator.hasNext();) {
+				City city = (City) iterator.next();
+				if(city.name.equals(parent.name) ){
+					childCity = city;
+				//	System.out.println("child city in getChildCity method " + childCity.name);
+					return childCity;
+				}
+				
+			}
+			return null;
+			
+		}
+
+	void printGoalPath(String goalName){
+
+//		PathRecord temporaryRecord = new PathRecord("");
+		System.out.println("Goal Path is " + pathsTraveled.size());
+		for (Iterator<PathRecord> iterator = pathsTraveled.iterator(); iterator.hasNext();) {
+			PathRecord pathRecord = (PathRecord) iterator.next();
+//			System.out.println("------" + pathRecord.lastEntry + "------");
+			if(pathRecord.lastEntry.equals(goalName)){
+				System.out.println(pathRecord.accumulatedPath + " " + pathRecord.accumulatedDistance);
+			}
+//			System.out.println("Paths followed to get here is");
+//			System.out.println(pathRecord.accumulatedPath);
+			}
+
+	}
+}
+*/
+
+//City class 
+class City{
+	public String name;
+	ArrayList<Neighbor> neighbor;
+	public City(String name)//, Neighbor neighbor)
+	{
+		this.name=name;
+		neighbor = new ArrayList<Neighbor>();
+		//this.neighbor.add(neighbor);
+	}
+}
+
+//class Neighbor
+class Neighbor{
+	public String	name;	
+	 public double	distance;	
+	 public double	shortestDistance;
+	 public Neighbor (String name, double distance, double shortestDistance){
+		 this.name = name;
+		 this.distance = distance;
+		 this.shortestDistance = shortestDistance;
+	 }
+}
+
+//class PathRecord
+class PathRecord{
+public String accumulatedPath;
+public String lastEntry;
+public double accumulatedDistance;
+
+@Override
+public String toString() {
+StringBuilder builder = new StringBuilder();
+builder.append(accumulatedPath);
+builder.append(" ").append(lastEntry);
+return builder.toString();
+}
+	 PathRecord(String start){
+		accumulatedPath = start;
+		lastEntry = start;
+		accumulatedDistance = 0;
+	}
+	 PathRecord(){
+	 }
+	 
+	 public PathRecord(PathRecord another) {
+		    this.accumulatedDistance = another.accumulatedDistance; // you can access  
+		    this.lastEntry = another.lastEntry;
+		    this.accumulatedPath = another.accumulatedPath;
+	 }
+	void addPath (PathRecord parentRecord, City childCity, Neighbor currentNeighbor){
+		//System.out.println("called");
+		parentRecord.accumulatedPath = parentRecord.accumulatedPath +" - "+ childCity.name;
+		parentRecord.lastEntry = childCity.name;
+		parentRecord.accumulatedDistance = parentRecord.accumulatedDistance + currentNeighbor.distance;
+	}
+}
+
+//Class Graph
+class Graph{
+		public ArrayList<City> cities;
+
+	public void makeMap(){
+		cities = new ArrayList<City>();
+/*******************************************************
+* 
+* road(oradea,    zerind,     71).  road(zerind,         arad,           75).
+* road(arad,      timisoara, 118).  road(timisoara,      lugoj,         111).
+* road(lugoj,     mehadia,    70).  road(dobreta,        mehadia,        75).
+* road(oradea,    sibiu,     151).  road(arad,           sibiu,         140).
+* road(dobreta,   craiova,   120).  road(sibiu,          rimnicu_vilcea, 80).
+* road(sibiu,     fagaras,    99).  road(rimnicu_vilcea, craiova,       146).
+* road(pitesti,   craiova,   138).  road(rimnicu_vilcea, pitesti,        97).
+* road(bucharest, pitesti,   101).  road(bucharest,      fagaras,       211).
+* road(bucharest, giurgiu,    90).  road(bucharest,      urziceni,       85).
+* road(vaslui,    urziceni,  142).  road(hirsova,        urziceni,       98).
+* road(hirsova,   eforie,     86).  road(vaslui,         iasi,           92).
+* road(neamt,     iasi,       87).
+* 
+* 
+*/
+		City tempCity;
+		Neighbor tempNeighbor;
+		
+		//1 City Oradea
+		tempCity = new City("oradea");
+		tempNeighbor =  new Neighbor("zerind", 71.0, 374.0);
+		tempCity.neighbor.add(tempNeighbor);
+		tempNeighbor = new Neighbor("sibiu", 151.0, 253.0);
+		tempCity.neighbor.add(tempNeighbor);
+		cities.add(tempCity);
+		
+		//2 Enter Data for Zerind	
+		tempCity = new City("zerind");
+	    tempNeighbor = new Neighbor("oradea",71,380);	
+		tempCity.neighbor.add(tempNeighbor);
+		tempNeighbor = new Neighbor("arad",75,366);
+		tempCity.neighbor.add(tempNeighbor);
+		cities.add(tempCity);
+		
+		//3 Enter Data for Arad	
+		tempCity = new City("arad");
+	    tempNeighbor = new Neighbor("timisoara",118,0);	
+		tempCity.neighbor.add(tempNeighbor);
+		tempNeighbor = new Neighbor("sibiu",140,366);
+		tempCity.neighbor.add(tempNeighbor);
+		tempNeighbor = new Neighbor("zerind",75,366);
+		tempCity.neighbor.add(tempNeighbor);
+
+		cities.add(tempCity);
+		
+		//4 Enter Data for timisoara	
+		tempCity = new City("timisoara");
+	    tempNeighbor = new Neighbor("arad",118,0);	
+		tempCity.neighbor.add(tempNeighbor);
+		tempNeighbor = new Neighbor("lugoj",111,366);
+		tempCity.neighbor.add(tempNeighbor);
+
+		cities.add(tempCity);
+		
+		//5 Enter Data for lugoj	
+		tempCity = new City("lugoj");
+	    tempNeighbor = new Neighbor("timisoara",111,0);	
+		tempCity.neighbor.add(tempNeighbor);
+		tempNeighbor = new Neighbor("mehadia",70,366);
+		tempCity.neighbor.add(tempNeighbor);
+
+		cities.add(tempCity);
+		
+		//6 Enter Data for mehadia	
+		tempCity = new City("mehadia");
+		tempNeighbor = new Neighbor("lugoj",70,0);	
+		tempCity.neighbor.add(tempNeighbor);
+		tempNeighbor = new Neighbor("drobeta",75,366);
+		tempCity.neighbor.add(tempNeighbor);
+
+		cities.add(tempCity);
+		
+		//7 Enter Data for drobeta	
+				tempCity = new City("drobeta");
+				tempNeighbor = new Neighbor("mehadia",75,0);	
+				tempCity.neighbor.add(tempNeighbor);
+				tempNeighbor = new Neighbor("craiova",120,366);
+				tempCity.neighbor.add(tempNeighbor);
+
+				cities.add(tempCity);
+				
+				//8 Enter Data for craiova	
+				tempCity = new City("craiova");
+				tempNeighbor = new Neighbor("drobeta",120,0);	
+				tempCity.neighbor.add(tempNeighbor);
+				tempNeighbor = new Neighbor("rimnicu_vilcea",146,366);
+				tempCity.neighbor.add(tempNeighbor);
+				tempNeighbor = new Neighbor("pitesti",138,366);
+				tempCity.neighbor.add(tempNeighbor);
+
+				cities.add(tempCity);
+				
+				//9 Enter Data for pitesti	
+				tempCity = new City("pitesti");
+				tempNeighbor = new Neighbor("bucharest",101,0);	
+				tempCity.neighbor.add(tempNeighbor);
+				tempNeighbor = new Neighbor("rimnicu_vilcea",97,366);
+				tempCity.neighbor.add(tempNeighbor);
+				tempNeighbor = new Neighbor("craiova",138,366);
+				tempCity.neighbor.add(tempNeighbor);
+				cities.add(tempCity);
+
+				//10 Enter Data for rimnicu_vilcea	
+				tempCity = new City("rimnicu_vilcea");
+				tempNeighbor = new Neighbor("sibiu",80,0);	
+				tempCity.neighbor.add(tempNeighbor);
+				tempNeighbor = new Neighbor("pitesti",97,366);
+				tempCity.neighbor.add(tempNeighbor);
+				tempNeighbor = new Neighbor("craiova",146,366);
+				tempCity.neighbor.add(tempNeighbor);
+
+				cities.add(tempCity);
+				
+				//11 Enter Data for sibiu	
+				tempCity = new City("sibiu");
+				tempNeighbor = new Neighbor("arad",140,0);	
+				tempCity.neighbor.add(tempNeighbor);
+				tempNeighbor = new Neighbor("rimnicu_vilcea",80,366);
+				tempCity.neighbor.add(tempNeighbor);
+				tempNeighbor = new Neighbor("fagaras",99,366);
+				tempCity.neighbor.add(tempNeighbor);
+				tempNeighbor = new Neighbor("oradea",151,366);
+				tempCity.neighbor.add(tempNeighbor);
+
+
+				cities.add(tempCity);	
+		
+				//12 Enter Data for bucharest	
+				tempCity = new City("bucharest");
+				tempNeighbor = new Neighbor("pitesti",101,0);	
+				tempCity.neighbor.add(tempNeighbor);
+				tempNeighbor = new Neighbor("giurgiu",90,366);
+				tempCity.neighbor.add(tempNeighbor);
+				tempNeighbor = new Neighbor("urziceni",85,366);
+				tempCity.neighbor.add(tempNeighbor);
+				tempNeighbor = new Neighbor("fagaras",211,366);
+				tempCity.neighbor.add(tempNeighbor);
+				cities.add(tempCity);
+				
+				//13 Enter Data for urziceni	
+				tempCity = new City("urziceni");
+				tempNeighbor = new Neighbor("bucharest",85,0);	
+				tempCity.neighbor.add(tempNeighbor);
+				tempNeighbor = new Neighbor("hirsova",98,366);
+				tempCity.neighbor.add(tempNeighbor);
+				tempNeighbor = new Neighbor("vaslui",142,366);
+				tempCity.neighbor.add(tempNeighbor);
+				cities.add(tempCity);
+				
+				//14 Enter Data for hirsova	
+				tempCity = new City("hirsova");
+				tempNeighbor = new Neighbor("urziceni",98,0);	
+				tempCity.neighbor.add(tempNeighbor);
+				tempNeighbor = new Neighbor("eforie",86,366);
+				tempCity.neighbor.add(tempNeighbor);
+				cities.add(tempCity);
+				
+				//15 Enter Data for eforie	
+				tempCity = new City("eforie");
+				tempNeighbor = new Neighbor("hirsova",86,0);	
+				tempCity.neighbor.add(tempNeighbor);
+				cities.add(tempCity);
+				
+				//16 Enter Data for vaslui	
+				tempCity = new City("vaslui");
+				tempNeighbor = new Neighbor("urzieceni",142,0);	
+				tempCity.neighbor.add(tempNeighbor);
+				tempNeighbor = new Neighbor("iasi",92,0);	
+				tempCity.neighbor.add(tempNeighbor);
+				cities.add(tempCity);
+				
+				//17 Enter Data for iasi	
+				tempCity = new City("iasi");
+				tempNeighbor = new Neighbor("neamt",87,0);	
+				tempCity.neighbor.add(tempNeighbor);
+				tempNeighbor = new Neighbor("vaslui",92,0);	
+				tempCity.neighbor.add(tempNeighbor);
+				cities.add(tempCity);
+				
+				//18 Enter Data for neamt	
+				tempCity = new City("neamt");
+				tempNeighbor = new Neighbor("isai",87,0);	
+				tempCity.neighbor.add(tempNeighbor);
+				cities.add(tempCity);
+				
+				//19 Enter Data for fagaras	
+				tempCity = new City("fagaras");
+				tempNeighbor = new Neighbor("sibiu",99,0);	
+				tempCity.neighbor.add(tempNeighbor);
+				tempNeighbor = new Neighbor("bucharest",211,0);	
+				tempCity.neighbor.add(tempNeighbor);
+				cities.add(tempCity);
+				
+				//20 Enter Data for giurgiu	
+				tempCity = new City("giurgiu");
+				tempNeighbor = new Neighbor("bucharest",90,0);	
+				tempCity.neighbor.add(tempNeighbor);
+				cities.add(tempCity);
+		
+	}
+	
+	public void printCities(){
+		int i=1;
+		for (Iterator<City> iterator = cities.iterator(); iterator.hasNext();) {
+			City city = (City) iterator.next();
+			System.out.println("Number ---" + i );
+			i++;
+			System.out.println("City name is " + city.name);
+			System.out.println("City neighbors are : ");
+			for (Iterator<Neighbor> iterator2 = city.neighbor.iterator(); iterator2.hasNext();) {
+				Neighbor neighbor = (Neighbor) iterator2.next();
+				System.out.println(neighbor.name + "   " + neighbor.distance+ "  " + neighbor.shortestDistance);
+			}
+			
+		}
+	}
+	
+	
+}
